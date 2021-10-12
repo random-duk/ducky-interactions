@@ -1,0 +1,7 @@
+aiohttp==3.7.4.post0
+ciso8601==2.2.0
+quart==0.15.1
+pynacl==1.4.0
+ujson==4.2.0
+gevent==21.8.0
+uvicorn==0.15.0
