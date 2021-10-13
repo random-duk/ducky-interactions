@@ -1,4 +1,4 @@
-from quart import Quart, request, current_app, abort, jsonify
+from quart import Quart, request, g, current_app, abort, jsonify
 import asyncio
 
 from nacl.signing import VerifyKey
@@ -30,8 +30,11 @@ app = Quart(__name__)
 async def on_startup():
     app.http = HTTP(token=TOKEN)
     app.commands = dict()
+    app.component_interactions = dict()
     app.register_command = register_command
+    app.register_component_interaction = register_component_interaction
     load_commands()
+    load_component_interactions()
     await upload_commands()
 
 
@@ -45,7 +48,7 @@ async def interaction():
     elif body['type'] == 2:
         name = body['data']['name']
         command = current_app.commands.get(name)
-        context = Context(current_app.http, body)
+        context = Context(2, current_app.http, body)
         args = body['data'].get('options', ())
         kwargs = {}
         for arg in args:
@@ -62,6 +65,25 @@ async def interaction():
                 if task.exception():
                     raise task.exception()
                 return jsonify(task.result().to_json())
+    elif body['type'] == 3:
+        if not getattr(g, 'received_buttons', None):
+            g.received_buttons = list()
+        name = body['data']['custom_id']
+        component_interaction = current_app.component_interactions.get(name)
+        context = Context(3, current_app.http, body)
+        task = asyncio.create_task(component_interaction.execute(context))
+        while True:
+            if not task.done():
+                if perf_counter() - start_time <= 2.5:
+                    await asyncio.sleep(.1)
+                else:
+                    context._acked = True
+                    return jsonify(({"type": 6}))
+            else:
+                if task.exception():
+                    raise task.exception()
+                return jsonify(task.result().to_json())
+
 
 
 def verify_key(body, headers):
@@ -79,6 +101,10 @@ def register_command(command):
     current_app.commands[command.name] = command
 
 
+def register_component_interaction(component_interaction):
+    current_app.component_interactions[component_interaction.name] = component_interaction
+
+
 def load_commands():
     for _, _, files in os.walk('commands'):
         for file in files:
@@ -87,6 +113,14 @@ def load_commands():
                 import_module(f'commands.{file}')
                 sys.modules[f'commands.{file}'].setup()
 
+
+def load_component_interactions():
+    for _, _, files in os.walk('component_responses'):
+        for file in files:
+            if file.endswith('.py'):
+                file = file.split('.py')[0]
+                import_module(f'component_responses.{file}')
+                sys.modules[f'component_responses.{file}'].setup()
 
 async def upload_commands(guild_id=None):
     data = [command.to_json() for command in app.commands.values()]

@@ -12,7 +12,6 @@ from sys import version_info
 
 class Info(Command):
     async def execute(self, context, **kwargs) -> InteractionResponse:
-        print(version_info)
         owner = 'Auxim#0001'
         support_server = 'https://discord.gg/BP2SV3J'
         website = 'https://random-d.uk'
