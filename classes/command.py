@@ -74,5 +74,4 @@ class Command:
             data['description'] = self.description
         if self.options:
             data['options'] = [option.to_json() for option in self.options]
-        print(data)
         return data

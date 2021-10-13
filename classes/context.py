@@ -5,10 +5,14 @@ from classes.response import InteractionResponse, InteractionCallbackData, Inter
 from classes.member import Member
 from classes.user import User
 
+from classes.components import ActionRow, Button, SelectMenu
+
 
 class Context:
-    def __init__(self, http, interaction):
+    def __init__(self, interaction_type, http, interaction):
         self._acked = False
+
+        self.type = interaction_type
 
         self.http = http
         self.interaction = interaction
@@ -32,13 +36,35 @@ class Context:
     def message(self) -> dict:
         return self.interaction['message'] if 'message' in self.interaction else None
 
-    async def respond(self, content=None, embeds=None, ephemeral=False):
+    async def respond(self, content=None, embeds=None, ephemeral=False, components=None):
         if ephemeral:
             ephemeral = InteractionCallbackDataFlags.EPHEMERAL.value
         else:
             ephemeral = 0
-        data = InteractionCallbackData(content=content, embeds=embeds, flags=ephemeral)
-        if not self._acked:
-            return InteractionResponse(InteractionCallbackType.CHANNEL_MESSAGE_WITH_SOURCE, data)
-        else:
-            await self.http.request('POST', f'/webhooks/{self.application_id}/{self.interaction_token}', json=data)
+        if components:
+            if isinstance(components, ActionRow):
+                components = [components.to_json()]
+            elif isinstance(components, Button) or isinstance(components, SelectMenu):
+                row = ActionRow()
+                row.add_components(components)
+                components = [row]
+            else:
+                rows = []
+                row = ActionRow()
+                for i, component in enumerate(components):
+                    if i % 5 == 0 and i != 0:
+                        rows.append(row)
+                        row = ActionRow()
+                    row.add_components(component)
+                components = rows
+        data = InteractionCallbackData(content=content, embeds=embeds, flags=ephemeral, components=components)
+        if self.type == 2:
+            if not self._acked:
+                return InteractionResponse(InteractionCallbackType.CHANNEL_MESSAGE_WITH_SOURCE, data)
+            else:
+                await self.http.request('POST', f'/webhooks/{self.application_id}/{self.interaction_token}', json=data)
+        elif self.type == 3:
+            if not self._acked:
+                return InteractionResponse(InteractionCallbackType.UPDATE_MESSAGE, data)
+            else:
+                await self.http.request('PATCH', f'/webhooks/{self.application_id}/{self.interaction_token}/messages/@original', json=data.to_json())

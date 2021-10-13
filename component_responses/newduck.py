@@ -1,17 +1,15 @@
-from classes.command import Command
-from classes.command import ApplicationCommandType
-
-from classes.response import InteractionResponse
-
-from classes.embed import Embed
-from classes.components import Button, ButtonStyle
+from quart import current_app
 
 from time import time
 
-from quart import current_app
+from classes.components import ComponentInteraction, Button, ButtonStyle
+
+from classes.response import InteractionResponse
+from classes.embed import Embed
+import asyncio
 
 
-class Duck(Command):
+class NewDuck(ComponentInteraction):
     async def execute(self, context, **kwargs) -> InteractionResponse:
         em = Embed(title=':duck: QUACK! A random duck for you!', color=3553598)
         em.set_image(url=f'https://random-d.uk/api/v2/randomimg?t={int(time())}')
@@ -21,4 +19,4 @@ class Duck(Command):
 
 
 def setup():
-    current_app.register_command(Duck('duck', 'Show you a cute duck', ApplicationCommandType.CHAT_INPUT))
+    current_app.register_component_interaction(NewDuck('duck-button'))
