@@ -15,7 +15,7 @@ class HTTPDuck(Command):
                  418: "I'm a teapot", 420: "Enhance your calm", 426: "Upgrade Required", 429: "Too Many Requests",
                  451: "Unavailable for legal reasons", 500: "Internal Server Error"}
         embed = Embed(title=f'{http_code}: {codes[http_code]}', color=3553598)
-        embed.set_image(url=f'https://random-d.uk/api/http/{http_code}')
+        embed.set_image(url=f'https://random-d.uk/api/http/{http_code}.jpg')
         embed.set_footer('Powered by random-d.uk')
         return await context.respond(embeds=[embed])
 
