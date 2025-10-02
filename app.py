@@ -1,6 +1,6 @@
 from quart import Quart, request, g, current_app, abort, jsonify
 import asyncio
-
+import os
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
@@ -17,11 +17,10 @@ except ModuleNotFoundError:
 from modules.http import HTTP
 from classes.context import Context
 
-config = json.load(open('config.json'))
+TOKEN = os.getenv("DISCORD_TOKEN")
+CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 
-TOKEN = config['discord']['token']
-CLIENT_ID = config['discord']['client_id']
-PUBLIC_KEY = config['discord']['public_key']
 
 app = Quart(__name__)
 

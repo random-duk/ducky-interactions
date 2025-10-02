@@ -69,7 +69,7 @@ class Command:
         pass
 
     def to_json(self):
-        data = {"type": self.type.value, "name": self.name}
+        data = {"type": self.type.value, "name": self.name, "contexts": [0,1,2],"integration_types": [0,1]}
         if self.description:
             data['description'] = self.description
         if self.options:
