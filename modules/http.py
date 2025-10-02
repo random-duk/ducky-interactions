@@ -1,3 +1,5 @@
+import os
+
 import aiohttp
 
 try:
@@ -10,12 +12,7 @@ class HTTP:
     def __init__(self, token):
         self.token = token
 
-        config = json.load(open('config.json'))
-
-        CLIENT_ID = config['discord']['client_id']
-        CLIENT_SECRET = config['discord']['client_secret']
-
-        TOKEN = config['discord']['token']
+        TOKEN = os.getenv("DISCORD_TOKEN")
         USER_AGENT = "DuckyBot/aiohttp/python"
 
         self.base_url = 'https://discordapp.com/api'

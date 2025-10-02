@@ -36,6 +36,9 @@ async def on_startup():
     load_component_interactions()
     await upload_commands()
 
+@app.route('/')
+async def index():
+    return jsonify({"status": "ok"})
 
 @app.route('/interactions', methods=['POST'])
 async def interaction():
